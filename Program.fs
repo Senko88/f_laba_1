@@ -45,18 +45,38 @@ let rec factorial n =
 let num = inputPositiveNumber "Введите число для вычисления факториала: "
 printfn "Факториал %d = %d" num (factorial num)
 
-/// Функция ввода списка чисел одной строкой через пробел
+
+/// функция ввода числа с проверкой
+let inputNumber prompt =
+    let rec loop () =
+        printf "%s" prompt
+        match Int32.TryParse(Console.ReadLine()) with
+        | true, num -> num
+        | _ -> 
+            printfn "Ошибка! Введите целое число."
+            loop ()
+    loop ()
+
+/// Функция ввода списка с строгой проверкой каждого числа
 let inputList () =
     printfn "Введите числа через пробел:"
-    Console.ReadLine().Split(' ')
-    |> Array.filter (fun x -> x <> "")  
-    |> Array.map (fun x -> 
-        match Int32.TryParse(x) with
-        | true, num -> num 
-        | _ -> 
-            printfn $"Не удалось распознать число: '{x}'. Будет заменено на 0."
-            0)  
-    |> List.ofArray  
+    let rec processInput (input: string[]) acc index =
+        if index >= input.Length then 
+            List.rev acc  
+        else
+            let item = input.[index].Trim()
+            if String.IsNullOrEmpty(item) then
+                processInput input acc (index + 1)  
+            else
+                match Int32.TryParse(item) with
+                | true, num -> 
+                    processInput input (num :: acc) (index + 1)  
+                | false, _ -> 
+                    printfn $"Ошибка: '{item}' не является числом. Пропускаем."
+                    processInput input acc (index + 1) 
+    
+    let input = Console.ReadLine().Split(' ')
+    processInput input [] 0
 
 /// Основные операции со списками:
 let addElement x list = x :: list  // Добавление элемента в начало
@@ -70,24 +90,24 @@ let getElement index list =  // Безопасное получение по и�
 
 /// Основная программа работы со списками
 printfn "=== Операции со списками ==="
-let list = inputList()  
+let list = inputList()  // Ввод исходного списка с проверкой
 printfn "Ваш список: %A" list
 
-// 1. Добавление элемента
+// 1. Добавление элемента (теперь с проверкой)
 printf "Введите число для добавления в начало списка: "
-let numToAdd = Console.ReadLine() |> int  
+let numToAdd = inputNumber ""  // Используем нашу безопасную функцию
 let newList = addElement numToAdd list
 printfn "Список после добавления: %A" newList
 
-// 2. Удаление элемента
+// 2. Удаление элемента (теперь с проверкой)
 printf "Введите число для удаления: "
-let numToRemove = Console.ReadLine() |> int
+let numToRemove = inputNumber ""
 let filteredList = removeElement numToRemove newList
 printfn "Список после удаления: %A" filteredList
 
-// 3. Проверка наличия элемента
+// 3. Проверка наличия элемента (теперь с проверкой)
 printf "Введите число которое хотите найти: "
-let numToCheck = Console.ReadLine() |> int
+let numToCheck = inputNumber ""
 printfn "Число %d %s в списке" numToCheck 
     (if contains numToCheck filteredList then "есть" else "нет")
 
